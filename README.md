@@ -1,6 +1,13 @@
 <div align="center">
 
-# db-host
+<a href="assets/banner.png">
+  <img
+    src="assets/banner.png"
+    alt="LightLoft — distributed SQLite, sunlit and stored"
+    width="720"
+    style="max-width: min(92vw, 720px); height: auto; border-radius: 20px; box-shadow: 0 25px 80px -20px rgba(0, 0, 0, 0.45);"
+  />
+</a>
 
 ### **SQLite that sleeps in S3 and wakes up when you query it.**
 
@@ -11,13 +18,18 @@
 [![Storage](https://img.shields.io/badge/storage-S3%20%28distributed--sqlite%29-f97316?style=flat-square)](https://pypi.org/project/distributed-sqlite/)
 [![Meta](https://img.shields.io/badge/metadata-Backboard-7c3aed?style=flat-square)](https://backboard.io)
 
+<br/>
+
+
+<sub>Click the banner for the full image · art lives in <code>assets/</code></sub>
+
 </div>
 
 ---
 
 ## The 12-second pitch
 
-**db-host** is a tiny control plane for **tenant-isolated SQLite databases** backed by **S3**. Sign up, spin a database, run SQL over the API or wire up the Python client for **STS-minted** direct access. User accounts and catalog metadata live in **[Backboard](https://backboard.io)**; the heavy bytes stay in your bucket. Local dev uses **LocalStack** so you never need a credit card to try the full loop.
+**LightLoft** is a tiny control plane for **tenant-isolated SQLite databases** backed by **S3**. Sign up, spin a database, run SQL over the API or wire up the Python **`db-host-client`** for **STS-minted** direct access. User accounts and catalog metadata live in **[Backboard](https://backboard.io)**; the heavy bytes stay in your bucket. Local dev uses **LocalStack** so you never need a credit card to try the full loop.
 
 If you’ve ever wanted “Postgres ergonomics-ish, but actually just SQLite and an object store,” welcome home.
 
@@ -58,7 +70,7 @@ flowchart LR
   BB -->|users + db catalog| DB
 ```
 
-- **Frontend** (`web/`): Next.js 16, React 19, Tailwind, shadcn-flavored UI—pretty enough that demo day doesn’t embarrass you.
+- **Frontend** (`web/`): Next.js 16, React 19, Tailwind, shadcn-flavored UI—**LightLoft** branding and dashboard.
 - **API** (`api/`): FastAPI, Pydantic models everywhere, bcrypt + JWT for humans, per-database API keys for machines.
 - **SDK** (`sdk/`): Exchange API key → STS session → SQLAlchemy engine (`distributed_sqlite` dialect).
 
@@ -94,7 +106,7 @@ chmod +x start.sh
 
 | URL | What |
 |-----|------|
-| http://localhost:3000 | Dashboard |
+| http://localhost:3000 | LightLoft dashboard |
 | http://localhost:8000/docs | Interactive OpenAPI |
 | http://localhost:8000/health | Sanity check |
 | http://localhost:4566 | LocalStack |
@@ -111,7 +123,7 @@ chmod +x start.sh
 ## API cheat sheet
 
 | Method | Path | Notes |
-|--------|------|-------|
+|--------|------|------|
 | `POST` | `/auth/signup` | Returns JWT |
 | `POST` | `/auth/signin` | Returns JWT |
 | `GET` | `/databases` | List yours |
@@ -151,6 +163,7 @@ The API brokers **scoped** credentials so each tenant’s engine only sees its p
 ```
 db_host/
 ├── api/           # FastAPI app — all business logic lives here
+├── assets/        # Logo & banner (LightLoft brand art)
 ├── web/           # Next.js dashboard
 ├── sdk/           # db-host-client (STS + SQLAlchemy)
 ├── scripts/       # LocalStack STS bootstrap, E2E helpers

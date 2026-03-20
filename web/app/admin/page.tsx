@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import axios from "axios";
 import {
-  Shield,
   ChevronDown,
   ChevronRight,
   Database,
@@ -32,6 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import BrandMark from "@/components/brand-mark";
 import { useAuth } from "@/hooks/use-auth";
 import {
   getAdminBootstrap,
@@ -180,14 +180,9 @@ export default function AdminPage() {
       <header className="border-b border-border sticky top-0 z-40 bg-background/85 backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0">
-              <Shield className="w-4 h-4 text-white" />
-            </div>
+            <BrandMark showWordmark wordmarkClassName="font-semibold text-sm tracking-tight" size={28} />
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-sm tracking-tight">
-                  db-host
-                </span>
                 <Badge
                   variant="outline"
                   className="text-[10px] uppercase tracking-wider border-violet-500/35 bg-violet-500/10 text-violet-300"

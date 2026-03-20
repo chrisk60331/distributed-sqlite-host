@@ -24,7 +24,7 @@ from models import (
     DatabaseS3SessionResponse,
     MintApiKeyResponse,
 )
-from s3_sts import assume_tenant_s3_session
+from s3_sts import assume_byo_role, assume_tenant_s3_session
 
 router = APIRouter(prefix="/databases", tags=["databases"])
 
@@ -152,6 +152,17 @@ async def list_databases(user: CurrentUser) -> list[DatabaseResponse]:
     return [_build_response(r) for r in records]
 
 
+def _s3_client_from_byo_creds(creds: dict, region: str) -> Any:
+    return boto3.client(
+        "s3",
+        aws_access_key_id=creds["AccessKeyId"],
+        aws_secret_access_key=creds["SecretAccessKey"],
+        aws_session_token=creds["SessionToken"],
+        region_name=region,
+        endpoint_url=AWS_ENDPOINT_URL or None,
+    )
+
+
 @router.post("", response_model=CreateDatabaseResponse, status_code=status.HTTP_201_CREATED)
 async def create_database(body: CreateDatabaseRequest, user: CurrentUser) -> CreateDatabaseResponse:
     user_id = user["sub"]
@@ -159,21 +170,57 @@ async def create_database(body: CreateDatabaseRequest, user: CurrentUser) -> Cre
     prefix = f"{user_id}/{body.name}"
     api_key, api_key_hash = _mint_api_key()
 
-    s3 = _s3_client()
-    _ensure_bucket(s3, S3_BUCKET)
+    use_byo = bool(body.byo_role_arn and body.byo_bucket_name)
+
+    if use_byo:
+        # Look up the user's ExternalId (created by GET /byo-bucket/setup)
+        byo_setup = await storage.get_byo_config(user_id)
+        if not byo_setup:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Call GET /byo-bucket/setup first to generate your ExternalId.",
+            )
+        try:
+            byo_creds = await run_in_threadpool(
+                assume_byo_role,
+                role_arn=body.byo_role_arn,
+                external_id=byo_setup.external_id,
+                region=body.byo_bucket_region,
+                endpoint_url=AWS_ENDPOINT_URL or None,
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Could not assume role '{body.byo_role_arn}': {e}",
+            ) from e
+        s3 = _s3_client_from_byo_creds(byo_creds, body.byo_bucket_region)
+        bucket = body.byo_bucket_name
+        region = body.byo_bucket_region
+        byo_role_arn = body.byo_role_arn
+        byo_external_id = byo_setup.external_id
+    else:
+        s3 = _s3_client()
+        _ensure_bucket(s3, S3_BUCKET)
+        bucket = S3_BUCKET
+        region = AWS_REGION
+        byo_role_arn = None
+        byo_external_id = None
+
     # Seed the prefix so it's visibly present in S3
-    s3.put_object(Bucket=S3_BUCKET, Key=f"{prefix}/.db-host-init", Body=b"")
+    s3.put_object(Bucket=bucket, Key=f"{prefix}/.db-host-init", Body=b"")
 
     record = DatabaseRecord(
         db_id=db_id,
         user_id=user_id,
         name=body.name,
-        bucket=S3_BUCKET,
+        bucket=bucket,
         prefix=prefix,
-        region=AWS_REGION,
+        region=region,
         endpoint_url=AWS_ENDPOINT_URL,
         created_at=datetime.now(timezone.utc).isoformat(),
         api_key_hash=api_key_hash,
+        byo_role_arn=byo_role_arn,
+        byo_external_id=byo_external_id,
     )
     await storage.create_database(record)
     base = _build_response(record)
@@ -190,14 +237,29 @@ async def get_database(db_id: str, user: CurrentUser) -> DatabaseResponse:
 
 @router.post("/s3-session", response_model=DatabaseS3SessionResponse)
 async def issue_s3_session(body: DatabaseS3SessionRequest) -> DatabaseS3SessionResponse:
+    rec = await storage.get_database_by_api_key(body.api_key)
+    if not rec or not rec.api_key_hash:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
+    if rec.byo_role_arn:
+        # BYO database: assume customer's cross-account role, then scope to prefix
+        try:
+            return await run_in_threadpool(
+                assume_tenant_s3_session,
+                record=rec,
+                role_arn=rec.byo_role_arn,
+                external_id=rec.byo_external_id,
+                duration_seconds=STS_DURATION_SECONDS,
+            )
+        except RuntimeError as e:
+            raise HTTPException(status_code=502, detail=str(e)) from e
+
+    # Platform-hosted database: use the platform assumable role
     if not S3_ASSUMABLE_ROLE_ARN:
         raise HTTPException(
             status_code=503,
             detail="S3 credential broker misconfigured: set DB_HOST_S3_ASSUMABLE_ROLE_ARN",
         )
-    rec = await storage.get_database_by_api_key(body.api_key)
-    if not rec or not rec.api_key_hash:
-        raise HTTPException(status_code=401, detail="Invalid API key")
     try:
         return await run_in_threadpool(
             assume_tenant_s3_session,

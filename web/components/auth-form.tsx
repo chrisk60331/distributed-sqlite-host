@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { signup, signin } from "@/lib/api";
+import BrandMark from "@/components/brand-mark";
 import { Loader2 } from "lucide-react";
 
 type Mode = "signin" | "signup";
@@ -43,13 +44,10 @@ export default function AuthForm() {
   };
 
   return (
-    <div className="w-full max-w-sm space-y-8">
+    <div className="w-full space-y-8">
       {/* Mobile logo */}
-      <div className="flex lg:hidden items-center gap-3 mb-8">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
-          <span className="text-white font-bold text-sm">db</span>
-        </div>
-        <span className="font-semibold text-lg tracking-tight">db-host</span>
+      <div className="flex lg:hidden mb-2 justify-center sm:justify-start">
+        <BrandMark priority size={40} wordmarkClassName="font-semibold text-lg tracking-tight" />
       </div>
 
       {/* Header */}
@@ -86,7 +84,7 @@ export default function AuthForm() {
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
-            className="bg-white/5 border-border focus:ring-2 focus:ring-primary/30"
+            className="bg-white/[0.06] border-border/90 transition-[box-shadow,border-color] duration-200 focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:border-primary/40"
           />
         </div>
 
@@ -100,13 +98,13 @@ export default function AuthForm() {
             onChange={(e) => setPassword(e.target.value)}
             required
             autoComplete={mode === "signup" ? "new-password" : "current-password"}
-            className="bg-white/5 border-border focus:ring-2 focus:ring-primary/30"
+            className="bg-white/[0.06] border-border/90 transition-[box-shadow,border-color] duration-200 focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:border-primary/40"
           />
         </div>
 
         <Button
           type="submit"
-          className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-medium transition-all active:scale-[0.97]"
+          className="w-full bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-white font-medium shadow-[0_8px_28px_-8px_rgba(234,88,12,0.55)] hover:shadow-[0_12px_32px_-8px_rgba(234,88,12,0.65)] transition-[transform,box-shadow,filter] duration-200 active:scale-[0.98]"
           disabled={loading}
         >
           {loading ? (
@@ -125,7 +123,7 @@ export default function AuthForm() {
         <button
           type="button"
           onClick={toggleMode}
-          className="text-primary hover:underline font-medium transition-colors"
+          className="text-primary font-medium rounded-sm px-1 -mx-0.5 underline-offset-4 hover:underline hover:text-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           {mode === "signin" ? "Sign up" : "Sign in"}
         </button>

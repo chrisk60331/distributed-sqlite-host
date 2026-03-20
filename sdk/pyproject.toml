@@ -1,6 +1,6 @@
 [project]
 name = "db-host-client"
-version = "0.1.0"
+version = "0.2.0"
 description = "db-host client: exchange API key for STS-scoped S3 creds and open distributed_sqlite"
 requires-python = ">=3.12"
 dependencies = [

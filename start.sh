@@ -40,6 +40,12 @@ echo "✅  LocalStack is ready"
 S3_BUCKET="${S3_BUCKET:-db-host-databases}"
 awslocal s3 mb "s3://${S3_BUCKET}" || true
 
+echo "☁️   Uploading CFN template to LocalStack..."
+BYO_BUCKET_CF_TEMPLATE_URL="$(bash "${SCRIPT_DIR}/scripts/upload-cfn-template.sh" \
+  --endpoint http://localhost:4566 --bucket db-host-public)"
+export BYO_BUCKET_CF_TEMPLATE_URL
+echo "   BYO_BUCKET_CF_TEMPLATE_URL=${BYO_BUCKET_CF_TEMPLATE_URL}"
+
 echo "🔐  Ensuring LocalStack IAM role for tenant STS..."
 DB_HOST_S3_ASSUMABLE_ROLE_ARN="$(bash "${SCRIPT_DIR}/scripts/bootstrap-localstack-sts.sh")"
 export DB_HOST_S3_ASSUMABLE_ROLE_ARN

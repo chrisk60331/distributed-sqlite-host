@@ -7,7 +7,7 @@ from typing import Optional
 import bcrypt
 from backboard import BackboardClient
 
-from models import DatabaseRecord, UserRecord
+from models import BYOBucketConfig, DatabaseRecord, UserRecord
 
 _client: Optional[BackboardClient] = None
 _assistant_id: Optional[str] = None
@@ -245,6 +245,48 @@ async def delete_database_by_id_global(db_id: str) -> Optional[DatabaseRecord]:
             await client.delete_memory(assistant_id=aid, memory_id=m.id)
             return rec
     return None
+
+
+# ── BYO Bucket Config ──────────────────────────────────────────────────────────
+
+async def get_byo_config(user_id: str) -> Optional[BYOBucketConfig]:
+    client = get_client()
+    aid = await get_assistant_id()
+    all_memories = await client.get_memories(aid)
+    for m in all_memories.memories:
+        meta = m.metadata or {}
+        if meta.get("type") == "byo_bucket_config" and meta.get("user_id") == user_id:
+            return BYOBucketConfig(**json.loads(m.content))
+    return None
+
+
+async def upsert_byo_config(config: BYOBucketConfig) -> BYOBucketConfig:
+    client = get_client()
+    aid = await get_assistant_id()
+    all_memories = await client.get_memories(aid)
+    for m in all_memories.memories:
+        meta = m.metadata or {}
+        if meta.get("type") == "byo_bucket_config" and meta.get("user_id") == config.user_id:
+            await client.delete_memory(assistant_id=aid, memory_id=m.id)
+            break
+    await client.add_memory(
+        assistant_id=aid,
+        content=config.model_dump_json(),
+        metadata={"type": "byo_bucket_config", "user_id": config.user_id},
+    )
+    return config
+
+
+async def delete_byo_config(user_id: str) -> bool:
+    client = get_client()
+    aid = await get_assistant_id()
+    all_memories = await client.get_memories(aid)
+    for m in all_memories.memories:
+        meta = m.metadata or {}
+        if meta.get("type") == "byo_bucket_config" and meta.get("user_id") == user_id:
+            await client.delete_memory(assistant_id=aid, memory_id=m.id)
+            return True
+    return False
 
 
 async def delete_user_memories(user_id: str) -> int:

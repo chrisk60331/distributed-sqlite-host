@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import DbCard from "@/components/db-card";
 import CreateDbDialog from "@/components/create-db-dialog";
 import EnvPreviewDialog from "@/components/env-preview-dialog";
+import BrandMark from "@/components/brand-mark";
 import { useAuth } from "@/hooks/use-auth";
 import {
   checkAdminAccess,
@@ -74,7 +75,6 @@ export default function DashboardPage() {
 
   const handleCreated = (db: DB) => {
     setDatabases((prev) => [db, ...prev]);
-    // Immediately open env preview so user gets their connection string
     setEnvDb(db);
     setEnvOpen(true);
   };
@@ -123,10 +123,7 @@ export default function DashboardPage() {
       <header className="border-b border-border sticky top-0 z-40 bg-background/80 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-md bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
-              <span className="text-white font-bold text-xs">db</span>
-            </div>
-            <span className="font-semibold text-sm tracking-tight">db-host</span>
+            <BrandMark showWordmark wordmarkClassName="font-semibold text-sm tracking-tight" size={28} />
             <Separator orientation="vertical" className="h-4 bg-border" />
             <span className="text-sm text-muted-foreground">Dashboard</span>
           </div>
@@ -169,7 +166,7 @@ export default function DashboardPage() {
             </p>
           </div>
           <Button
-            className="gap-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white active:scale-[0.97] transition-all"
+            className="gap-2 bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-white active:scale-[0.97] transition-all"
             onClick={() => setCreateOpen(true)}
           >
             <Plus className="w-4 h-4" />
@@ -197,10 +194,9 @@ export default function DashboardPage() {
             transition={{ duration: 0.4 }}
             className="flex flex-col items-center justify-center py-24 text-center"
           >
-            {/* Floating illustration */}
             <div className="db-icon-float mb-6">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/15 to-cyan-500/10 border border-blue-500/20 flex items-center justify-center">
-                <Database className="w-9 h-9 text-blue-400/70" />
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500/15 to-orange-500/10 border border-amber-500/25 flex items-center justify-center">
+                <Database className="w-9 h-9 text-amber-400/80" />
               </div>
             </div>
 
@@ -211,7 +207,7 @@ export default function DashboardPage() {
             </p>
 
             <Button
-              className="mt-6 gap-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white active:scale-[0.97] transition-all"
+              className="mt-6 gap-2 bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-white active:scale-[0.97] transition-all"
               onClick={() => setCreateOpen(true)}
             >
               <Sparkles className="w-4 h-4" />
@@ -237,7 +233,7 @@ export default function DashboardPage() {
           </AnimatePresence>
         )}
 
-        {/* How to connect (shown after first DB exists) */}
+        {/* How to connect */}
         {!dbsLoading && databases.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -246,7 +242,7 @@ export default function DashboardPage() {
             className="mt-10 rounded-xl border border-border bg-card p-6"
           >
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between mb-3">
-              <h3 className="font-semibold text-sm">Hello world · db-host-client</h3>
+              <h3 className="font-semibold text-sm">Hello world · db-host-client SDK</h3>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                 {databases.length > 1 && (
                   <label className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -280,8 +276,9 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground mb-3">
               <strong className="font-medium text-foreground/90">Run it</strong> calls{" "}
               <code className="text-cyan-400/90">POST /execute</code> with your dashboard session (same SQL
-              as the snippet). From your app, install{" "}
-              <code className="text-cyan-400/90">db-host-client</code>, set{" "}
+              as the snippet). From your app, install with{" "}
+              <code className="text-cyan-400/90">pip install db-host-client</code> (or{" "}
+              <code className="text-cyan-400/90">uv pip install db-host-client</code>), set{" "}
               <code className="text-cyan-400/90">DB_HOST_DATABASE_API_KEY</code> from your downloaded{" "}
               <code className="text-cyan-400/90">.env</code>, and open{" "}
               <code className="text-cyan-400/90">distributed_sqlite</code> via STS-backed{" "}
@@ -289,13 +286,15 @@ export default function DashboardPage() {
               <code className="text-cyan-400/90">AWS_*</code>.
             </p>
             <pre className="text-xs font-mono text-muted-foreground bg-black/40 rounded-lg p-4 overflow-x-auto">
-{`import os
+{`# pip install db-host-client
+# uv pip install db-host-client
+
+import os
 
 from sqlalchemy import text
 
 from db_host_client.client import connect
 
-# pip install /path/to/db_host/sdk
 # Use DB_HOST_* from your downloaded .env (API key: once at create, or POST …/api-key).
 
 API_KEY = os.environ["DB_HOST_DATABASE_API_KEY"]

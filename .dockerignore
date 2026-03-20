@@ -1,0 +1,31 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+api/__pycache__
+api/**/__pycache__
+api/*.pyc
+api/.venv
+api/.env
+api/runtime_trace.log
+
+# ── Node / Next.js ────────────────────────────────────────────────────────────
+web/node_modules
+web/.next
+web/.env*
+
+# ── Local dev secrets (never bake into the image) ─────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── LocalStack / Docker local state ──────────────────────────────────────────
+localstack_data/
+
+# ── Git ───────────────────────────────────────────────────────────────────────
+.git
+.gitignore
+
+# ── Editor / OS ───────────────────────────────────────────────────────────────
+.cursor
+.idea
+.vscode
+.DS_Store
+**/.DS_Store

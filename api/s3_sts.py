@@ -53,23 +53,28 @@ def assume_tenant_s3_session(
     *,
     record: DatabaseRecord,
     role_arn: str,
+    external_id: str | None = None,
     duration_seconds: int = 3600,
 ) -> DatabaseS3SessionResponse:
     """
     Call sts:AssumeRole with an inline session policy limited to this database prefix.
+    Pass external_id when assuming a cross-account BYO role.
     """
     region = record.region or os.getenv("AWS_DEFAULT_REGION", "us-east-1")
     endpoint = record.endpoint_url or os.getenv("AWS_ENDPOINT_URL") or None
     policy = _session_policy_for_prefix(bucket=record.bucket, prefix=record.prefix)
     session_name = f"dbhost-{record.db_id}".replace("-", "")[:60]
     sts = _sts_client(region=region, endpoint_url=endpoint)
+    kwargs: dict = dict(
+        RoleArn=role_arn,
+        RoleSessionName=session_name,
+        Policy=policy,
+        DurationSeconds=duration_seconds,
+    )
+    if external_id:
+        kwargs["ExternalId"] = external_id
     try:
-        resp = sts.assume_role(
-            RoleArn=role_arn,
-            RoleSessionName=session_name,
-            Policy=policy,
-            DurationSeconds=duration_seconds,
-        )
+        resp = sts.assume_role(**kwargs)
     except ClientError as e:
         raise RuntimeError(f"sts:AssumeRole failed: {e}") from e
     creds = resp["Credentials"]
@@ -86,3 +91,35 @@ def assume_tenant_s3_session(
         region=region,
         endpoint_url=record.endpoint_url,
     )
+
+
+def assume_byo_role(
+    *,
+    role_arn: str,
+    external_id: str,
+    region: str = "us-east-1",
+    endpoint_url: str | None = None,
+    duration_seconds: int = 900,
+) -> dict:
+    """
+    Assume a customer's cross-account BYO role. Returns raw Credentials dict
+    with AccessKeyId, SecretAccessKey, SessionToken.
+    """
+    sts = _sts_client(region=region, endpoint_url=endpoint_url)
+    try:
+        resp = sts.assume_role(
+            RoleArn=role_arn,
+            RoleSessionName="db-host-byo",
+            ExternalId=external_id,
+            DurationSeconds=duration_seconds,
+        )
+    except ClientError as e:
+        raise RuntimeError(f"sts:AssumeRole failed: {e}") from e
+    return resp["Credentials"]
+
+
+def get_platform_account_id(*, endpoint_url: str | None = None) -> str:
+    """Return the platform AWS account ID via sts:GetCallerIdentity."""
+    region = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
+    sts = _sts_client(region=region, endpoint_url=endpoint_url)
+    return sts.get_caller_identity()["Account"]

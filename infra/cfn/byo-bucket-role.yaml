@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Grant db-host cross-account access to your S3 bucket via a scoped IAM role.
+  After stack creation, copy the RoleArn output and paste it into the db-host
+  dashboard to complete the connection.
+
+Parameters:
+  ExternalId:
+    Type: String
+    Description: >
+      Unique token from db-host — prevents confused-deputy attacks.
+      Do NOT change this value.
+    AllowedPattern: "[a-zA-Z0-9_-]+"
+    MinLength: 10
+
+  BucketName:
+    Type: String
+    Description: >
+      Name of the existing S3 bucket db-host should read/write.
+      The bucket must already exist in your account.
+    AllowedPattern: "[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]"
+
+  DbHostAwsAccountId:
+    Type: String
+    Description: db-host platform AWS Account ID (pre-filled — do not change).
+    AllowedPattern: "[0-9]{12}"
+
+Resources:
+  DbHostCrossAccountRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: db-host-byo-bucket-access
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${DbHostAwsAccountId}:root
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                sts:ExternalId: !Ref ExternalId
+      Policies:
+        - PolicyName: DbHostBucketAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: ObjectRW
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:AbortMultipartUpload
+                  - s3:ListMultipartUploadParts
+                Resource: !Sub arn:aws:s3:::${BucketName}/*
+              - Sid: BucketList
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:ListBucketMultipartUploads
+                  - s3:GetBucketLocation
+                Resource: !Sub arn:aws:s3:::${BucketName}
+      Tags:
+        - Key: ManagedBy
+          Value: db-host
+        - Key: BucketName
+          Value: !Ref BucketName
+
+Outputs:
+  RoleArn:
+    Description: >
+      Paste this Role ARN into the db-host dashboard to complete the
+      BYO bucket connection.
+    Value: !GetAtt DbHostCrossAccountRole.Arn
+
+  BucketName:
+    Description: The S3 bucket this role grants access to.
+    Value: !Ref BucketName

@@ -36,6 +36,11 @@ class UserRecord(BaseModel):
 
 class CreateDatabaseRequest(BaseModel):
     name: str
+    # Optional per-DB BYO bucket. Requires GET /byo-bucket/setup to have been called
+    # first (so an ExternalId exists for the user). Validation happens inline.
+    byo_role_arn: Optional[str] = None
+    byo_bucket_name: Optional[str] = None
+    byo_bucket_region: str = "us-east-1"
 
     @field_validator("name")
     @classmethod
@@ -59,6 +64,8 @@ class DatabaseRecord(BaseModel):
     endpoint_url: Optional[str] = None
     created_at: str
     api_key_hash: Optional[str] = None
+    byo_role_arn: Optional[str] = None
+    byo_external_id: Optional[str] = None
 
 
 class DatabaseResponse(BaseModel):
@@ -155,3 +162,37 @@ class AdminBootstrapResponse(BaseModel):
 
 class AdminUserDeleteResult(BaseModel):
     databases_removed: int
+
+
+# ── BYO Bucket ─────────────────────────────────────────────────────────────────
+
+class BYOBucketConfig(BaseModel):
+    """Persisted per-user BYO bucket configuration (stored in Backboard)."""
+    user_id: str
+    external_id: str
+    role_arn: Optional[str] = None
+    bucket_name: Optional[str] = None
+    bucket_region: str = "us-east-1"
+    validated_at: Optional[str] = None
+
+
+class BYOBucketSetupResponse(BaseModel):
+    """Returned by GET /byo-bucket/setup — gives the user everything they need to run the CF template."""
+    external_id: str
+    platform_aws_account_id: str
+    cf_launch_url: Optional[str] = None
+    already_connected: bool = False
+
+
+class BYOBucketConnectRequest(BaseModel):
+    role_arn: str
+    bucket_name: str
+    bucket_region: str = "us-east-1"
+
+
+class BYOBucketConnectResponse(BaseModel):
+    external_id: str
+    role_arn: str
+    bucket_name: str
+    bucket_region: str
+    validated_at: str

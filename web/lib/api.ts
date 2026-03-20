@@ -52,8 +52,17 @@ export async function listDatabases(): Promise<Database[]> {
   return data;
 }
 
-export async function createDatabase(name: string): Promise<CreateDatabaseResult> {
-  const { data } = await api.post<CreateDatabaseResult>("/databases", { name });
+export interface CreateDatabaseOptions {
+  byo_role_arn?: string;
+  byo_bucket_name?: string;
+  byo_bucket_region?: string;
+}
+
+export async function createDatabase(
+  name: string,
+  byo?: CreateDatabaseOptions
+): Promise<CreateDatabaseResult> {
+  const { data } = await api.post<CreateDatabaseResult>("/databases", { name, ...byo });
   return data;
 }
 
@@ -90,6 +99,50 @@ export async function getEnvContent(dbId: string): Promise<string> {
     responseType: "text",
   });
   return data;
+}
+
+// ── BYO Bucket ────────────────────────────────────────────────────────────────
+
+export interface BYOSetupResponse {
+  external_id: string;
+  platform_aws_account_id: string;
+  cf_launch_url: string | null;
+  already_connected: boolean;
+}
+
+export interface BYOConnectResponse {
+  external_id: string;
+  role_arn: string;
+  bucket_name: string;
+  bucket_region: string;
+  validated_at: string;
+}
+
+export async function byoSetup(): Promise<BYOSetupResponse> {
+  const { data } = await api.get<BYOSetupResponse>("/byo-bucket/setup");
+  return data;
+}
+
+export async function byoConnect(
+  role_arn: string,
+  bucket_name: string,
+  bucket_region: string
+): Promise<BYOConnectResponse> {
+  const { data } = await api.post<BYOConnectResponse>("/byo-bucket/connect", {
+    role_arn,
+    bucket_name,
+    bucket_region,
+  });
+  return data;
+}
+
+export async function byoGetConfig(): Promise<BYOConnectResponse> {
+  const { data } = await api.get<BYOConnectResponse>("/byo-bucket/config");
+  return data;
+}
+
+export async function byoDeleteConfig(): Promise<void> {
+  await api.delete("/byo-bucket/config");
 }
 
 // ── Admin ─────────────────────────────────────────────────────────────────────

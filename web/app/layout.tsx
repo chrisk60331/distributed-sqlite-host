@@ -8,8 +8,13 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "db-host — Distributed SQLite, Instant",
-  description: "Hosted distributed SQLite databases backed by S3. Create a database in seconds.",
+  title: "LightLoft — SQLite that wakes when you query",
+  description:
+    "LightLoft hosts tenant-isolated SQLite databases in S3. Sign in, create a DB, run SQL in seconds.",
+  icons: {
+    icon: [{ url: "/brand/favicon.png", type: "image/png" }],
+    apple: "/brand/favicon.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

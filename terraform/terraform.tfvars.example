@@ -1,0 +1,54 @@
+# Copy to terraform.tfvars and fill in your values
+# NEVER commit terraform.tfvars to git
+
+environment = "prod"
+
+# S3 bucket for Litestream SQLite backups (must already exist or be created separately)
+litestream_bucket = "liteloft-db"
+
+# Custom domain (leave empty to use the default App Runner URL)
+custom_domain = ""
+
+# Monitoring
+alarm_email        = ""   # e.g. "ops@yourcompany.com" — leave empty to skip alarms
+log_retention_days = 90
+
+# --- URLs ---
+app_base_url             = "https://app.yourdomain.com"
+api_base_url             = "https://app.yourdomain.com"
+next_public_api_base_url = "https://app.yourdomain.com/v1"
+
+# --- Auth ---
+auth_mode         = "oauth"
+app_jwt_namespace = "https://yourdomain.com"
+
+# --- Email ---
+resend_from_email     = "noreply@yourdomain.com"
+gmail_user            = ""
+alert_recipient_email = ""
+
+# --- Backboard ---
+backboard_base_url     = "https://app.backboard.io/api"
+backboard_llm_provider = "openai"
+backboard_model_name   = "gpt-4o"
+backboard_memory_mode  = "On"
+
+# --- OAuth: Google ---
+google_client_id    = ""
+google_callback_url = "/oauth/google/callback"
+
+# --- OAuth: GitHub ---
+github_client_id    = ""
+github_callback_url = "/oauth/github/callback"
+
+# --- Secrets → stored in SSM Parameter Store ---
+# Keys map to /${app_name}/${environment}/<KEY> in SSM
+secrets = {
+  BACKBOARD_API_KEY    = "espr_..."
+  RESEND_API_KEY       = ""
+  AUTH_JWT_SECRET      = "a-long-random-string"
+  AUTH_SECRET          = "a-long-random-string"
+  GMAIL_APP_PASSWORD   = ""
+  GOOGLE_CLIENT_SECRET = ""
+  GITHUB_CLIENT_SECRET = ""
+}

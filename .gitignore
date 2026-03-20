@@ -27,3 +27,7 @@ localstack_data/
 # OS
 .DS_Store
 .cursor/
+
+*.tfvars
+*.tfstate
+*.tfstate.backup

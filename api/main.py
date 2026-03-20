@@ -20,7 +20,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from routers import admin, auth, databases
+from routers import admin, auth, byo_bucket, databases
 
 logging.basicConfig(
     level=logging.INFO,
@@ -97,6 +97,7 @@ async def trace_requests(request: Request, call_next):
 
 app.include_router(auth.router)
 app.include_router(databases.router)
+app.include_router(byo_bucket.router)
 app.include_router(admin.router)
 
 

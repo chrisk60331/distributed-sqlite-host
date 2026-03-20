@@ -78,7 +78,7 @@ export default function EnvPreviewDialog({ db, open, onOpenChange }: Props) {
             <code className="text-cyan-400 font-mono text-base">{db.name}.env</code>
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            No AWS keys — your app talks to db-host over HTTP. Paste the JWT from sign-in into{" "}
+            No AWS keys — your app talks to the LightLoft API over HTTP. Paste the JWT from sign-in into{" "}
             <code className="text-xs text-cyan-400">DB_HOST_TOKEN</code>. Keep this file out of git.
           </DialogDescription>
         </DialogHeader>
