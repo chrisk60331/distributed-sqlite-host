@@ -1,0 +1,29 @@
+# Env files (never commit secrets)
+.env
+api/.env
+web/.env.local
+
+# Python
+sdk/.venv/
+sdk/dist/
+api/dist/
+sdk/**/__pycache__/
+api/.venv/
+api/__pycache__/
+api/**/__pycache__/
+*.pyc
+api/runtime_trace.log
+api/api.log
+api/uvicorn.log
+
+# Next.js
+web/.next/
+web/node_modules/
+web/out/
+
+# LocalStack persistence
+localstack_data/
+
+# OS
+.DS_Store
+.cursor/
